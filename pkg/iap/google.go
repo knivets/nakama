@@ -31,8 +31,9 @@ import (
 )
 
 const (
-	GOOGLE_IAP_SCOPE = "https://www.googleapis.com/auth/androidpublisher"
-	GOOGLE_IAP_URL   = "https://www.googleapis.com/androidpublisher/v2/applications/%s/purchases/%s/%s/tokens/%s"
+	GOOGLE_IAP_SCOPE            = "https://www.googleapis.com/auth/androidpublisher"
+	GOOGLE_IAP_URL_PRODUCT      = "https://www.googleapis.com/androidpublisher/v2/applications/%s/purchases/products/%s/tokens/%s"
+	GOOGLE_IAP_URL_SUBSCRIPTION = "https://www.googleapis.com/androidpublisher/v2/applications/%s/purchases/subscriptions/%s/tokens/%s"
 )
 
 type GoogleClient struct {
@@ -147,7 +148,13 @@ func (gc *GoogleClient) VerifySubscription(p *GooglePurchase) (*PurchaseVerifyRe
 }
 
 func (gc *GoogleClient) sendGoogleRequest(p *GooglePurchase) ([]byte, error) {
-	url := fmt.Sprintf(GOOGLE_IAP_URL, gc.packageName, p.ProductType, p.ProductId, p.PurchaseToken)
+	url := ""
+	if p.ProductType == "product" {
+		url = fmt.Sprintf(GOOGLE_IAP_URL_PRODUCT, gc.packageName, p.ProductId, p.PurchaseToken)
+	} else {
+		url = fmt.Sprintf(GOOGLE_IAP_URL_SUBSCRIPTION, gc.packageName, p.ProductId, p.PurchaseToken)
+	}
+
 	resp, err := gc.client.Post(url, CONTENT_TYPE_APP_JSON, nil)
 	if err != nil {
 		return nil, errors.New("Could not connect to Google verification service.")
